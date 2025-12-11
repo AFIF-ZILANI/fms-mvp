@@ -1,0 +1,462 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Batches {
+  id                    String               @id @default(uuid())
+  starting_date         DateTime             @default(now())
+  expected_selling_date DateTime
+  initial_quantity      Int
+  supplier_id           String
+  breed                 BirdBreeds
+  batch_id              String               @unique
+  farm_code             String
+  product_code          String
+  sector_code           String
+  created_at            DateTime             @default(now())
+  updated_at            DateTime             @updatedAt
+  batchSuppliers        BatchSuppliers[]
+  DailyRecords          DailyRecords[]
+  Environment           EnvironmentRecords[]
+  Expenses              Expenses[]
+  Medications           Medications[]
+  Sales                 Sales[]
+  transactions          StockTransactions[]
+  Vaccination           Vaccinations[]
+  weightRecords         WeightRecords[]
+
+  @@index([farm_code, sector_code, product_code, batch_id])
+}
+
+model BatchSuppliers {
+  id            String    @id @default(uuid())
+  batch_id      String
+  supplier_id   String
+  quantity      Int // number of chicks from this supplier
+  delivery_date DateTime
+  quality_score Int
+  batch         Batches   @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  supplier      Suppliers @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+
+  @@unique([batch_id, supplier_id]) // one row per supplier per batch
+}
+
+model DailyRecords {
+  id               String   @id @default(uuid())
+  batch_id         String
+  batch            Batches  @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  house_id         Int
+  house            Houses   @relation(fields: [house_id], references: [id], onDelete: Cascade)
+  date             DateTime
+  age              Int // day of batch
+  mortality_count  Int      @default(0)
+  mortality_reason String?
+  feed_consumed_kg Float    @default(0)
+  water_consumed_l Float    @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([batch_id, house_id, date])
+  @@index([batch_id, house_id, age])
+}
+
+model WeightRecords {
+  id               String   @id @default(uuid())
+  batch_id         String
+  batch            Batches  @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  house_id         Int
+  house            Houses   @relation(fields: [house_id], references: [id], onDelete: Cascade)
+  age              Int // day of batch when weighed
+  average_wt_grams Float // sample average from 20 birds
+  sample_size      Int
+  date             DateTime
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([batch_id, house_id, age])
+}
+
+model Houses {
+  id         Int      @id @default(autoincrement())
+  name       String // e.g., "Brooder", "Grower 1", "Grower 2", "Grower 3"
+  number     Int? // optional numeric ID
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  dailyRecords  DailyRecords[]
+  weightRecords WeightRecords[]
+}
+
+model Profiles {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  name           String
+  mobile         String
+  address        String
+  avatar_id      String
+  online_contact ContactMethods[]
+  avatar         Avatars          @relation(fields: [avatar_id], references: [id])
+  employees      Employees[]
+  admins         Admins[]
+  customers      Customers[]
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  suppliers      Suppliers[]
+  doctor         Doctors[]
+  pharmacist     Pharmacists[]
+}
+
+model Employees {
+  id           String            @id @default(uuid())
+  profile_id   String
+  profiles     Profiles          @relation(fields: [profile_id], references: [id])
+  salary       Float
+  joining_date DateTime          @default(now())
+  rating       Float?            @default(0)
+  role         EmployeeRoleNames
+  created_at   DateTime          @default(now())
+  updated_at   DateTime          @updatedAt
+}
+
+model Admins {
+  id          String         @id @default(uuid())
+  profile_id  String         @unique
+  profile     Profiles       @relation(fields: [profile_id], references: [id])
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+  Medications Medications[]
+  Vaccination Vaccinations[]
+}
+
+model Customers {
+  id         String   @id @default(uuid())
+  profile_id String   @unique
+  profile    Profiles @relation(fields: [profile_id], references: [id])
+  rating     Float?   @default(0)
+  company    String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  Sales      Sales[]
+}
+
+model Suppliers {
+  id               String                     @id @default(uuid())
+  profile_id       String                     @unique
+  profile          Profiles                   @relation(fields: [profile_id], references: [id])
+  rating           Float?                     @default(0)
+  role             SupplierRoleNames
+  type             SupplierSupplyCategories[]
+  company          String?
+  created_at       DateTime                   @default(now())
+  updated_at       DateTime                   @updatedAt
+  StockTransaction StockTransactions[]
+  Items            Items[]
+  batchSuppliers   BatchSuppliers[]
+}
+
+model Doctors {
+  id          String         @id @default(uuid())
+  specialty   String?
+  position    String?
+  degrees     String[]
+  rating      Float?         @default(0)
+  sector      String?
+  institution String?
+  created_at  DateTime       @default(now())
+  updated_at  DateTime       @updatedAt
+  profile_id  String         @unique
+  profile     Profiles       @relation(fields: [profile_id], references: [id])
+  Medications Medications[]
+  Vaccination Vaccinations[]
+}
+
+model Pharmacists {
+  id            String   @id @default(uuid())
+  rating        Float?   @default(0)
+  institution   String?
+  is_registered Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  profile_id    String   @unique
+  profile       Profiles @relation(fields: [profile_id], references: [id])
+}
+
+model StockTransactions {
+  id               String           @id @default(uuid())
+  item_id          String
+  batch_id         String
+  quantity         Int
+  transaction_type TransactionTypes
+  date             DateTime         @default(now())
+  unit_price       Float
+  total_price      Float
+  supplier_id      String?
+  remarks          String?
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  batch            Batches          @relation(fields: [batch_id], references: [id])
+  item             Items            @relation(fields: [item_id], references: [id])
+  supplier         Suppliers?       @relation(fields: [supplier_id], references: [id])
+
+  @@index([item_id, batch_id])
+}
+
+model Items {
+  id             String              @id @default(uuid())
+  name           String
+  description    String?
+  category       ResourceCategories
+  unit_name      Units
+  unit_price     Float
+  stock_quantity Int                 @default(0)
+  reorder_level  Int                 @default(0)
+  is_consumable  Boolean             @default(true)
+  supplier_id    String?
+  created_at     DateTime            @default(now())
+  updated_at     DateTime            @updatedAt
+  transactions   StockTransactions[]
+  supplier       Suppliers?          @relation(fields: [supplier_id], references: [id])
+  sales_items    SalesItems[]
+}
+
+model SalesItems {
+  id         String @id @default(uuid())
+  sale_id    String
+  item_id    String
+  quantity   Int
+  unit_price Float
+  subtotal   Float
+  sale       Sales  @relation(fields: [sale_id], references: [id])
+  item       Items  @relation(fields: [item_id], references: [id])
+
+  @@index([sale_id, item_id])
+}
+
+model Medications {
+  id                 String   @id @default(uuid())
+  batch_id           String
+  date               DateTime @default(now())
+  medication_details String
+  administered_by    String
+  medicine_name      String
+  dosage             String
+  cause              String?
+  period             String?
+  doctor_id          String?
+  remarks            String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  administered       Admins   @relation(fields: [administered_by], references: [id])
+  batch              Batches  @relation(fields: [batch_id], references: [id])
+  doctor             Doctors? @relation(fields: [doctor_id], references: [id])
+}
+
+model Vaccinations {
+  id              String   @id @default(uuid())
+  batch_id        String
+  date            DateTime @default(now())
+  vaccine_details String?
+  administered_by String
+  vaccine_name    String
+  dosage          Int
+  cause           String?
+  period          String?
+  doctor_id       String?
+  remarks         String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  administered    Admins   @relation(fields: [administered_by], references: [id])
+  batch           Batches  @relation(fields: [batch_id], references: [id])
+  doctor          Doctors? @relation(fields: [doctor_id], references: [id])
+}
+
+model Sales {
+  id             String       @id @default(uuid())
+  batch_id       String
+  date           DateTime     @default(now())
+  customer_id    String?
+  delay_for_sale Int?
+  total_price    Float // total from items
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+  batch          Batches?     @relation(fields: [batch_id], references: [id])
+  customer       Customers?   @relation(fields: [customer_id], references: [id])
+  items          SalesItems[]
+}
+
+model Expenses {
+  id          String             @id @default(uuid())
+  batch_id    String?
+  date        DateTime           @default(now())
+  amount      Float
+  unit        Units
+  category    ResourceCategories
+  description String?
+  created_at  DateTime           @default(now())
+  updated_at  DateTime           @updatedAt
+  remarks     String?
+  batch       Batches?           @relation(fields: [batch_id], references: [id])
+}
+
+model EnvironmentRecords {
+  id               String      @id @default(uuid())
+  batch_id         String
+  house_no         Int
+  temperature_c    Float
+  humidity_percent Float
+  ammonia_ppm      Float
+  co2_ppm          Float
+  air_pressure_hpa Float
+  time_period      TimePeriods
+  recorded_at      DateTime    @default(now())
+  batch            Batches     @relation(fields: [batch_id], references: [id])
+}
+
+model Avatars {
+  id         String     @id @default(uuid())
+  public_id  String
+  image_url  String
+  created_at DateTime   @default(now())
+  profiles   Profiles[]
+}
+
+model Alerts {
+  id          String            @id @default(uuid())
+  title       String
+  description String?
+  type        AlertTypes // e.g. "employee", "batch", "finance"
+  level       AlertLevels // e.g. "info" | "warning" | "critical"
+  status      AlertStatus       @default(ACTIVE) // active | resolved
+  related_id  String? // link to employee_id, batch_id, etc.
+  action_type AlertActionTypes? // pay | assign | mark_resolved etc.
+  created_at  DateTime          @default(now())
+  resolved_at DateTime?
+}
+
+enum EmployeeRoleNames {
+  MANAGER
+  WORKER
+  INTERN
+}
+
+enum ContactMethods {
+  WHATSAPP
+  EMAIL
+  IMO
+  TELEGRAM
+}
+
+enum SupplierRoleNames {
+  SALES_MAN
+  OWNER
+  DISTRIBUTOR
+  DEALER
+  WHOLESALER
+  RETAILER
+  MANUFACTURER
+  IMPORTER
+  REPRESENTATIVE
+}
+
+enum TransactionTypes {
+  PURCHASE
+  SALE
+  RETURN
+  ADJUSTMENT
+  DAMAGE
+}
+
+enum Units {
+  BIRD
+  KG
+  LITER
+  BAG
+  BOX
+  UNIT
+  OTHER
+}
+
+enum TimePeriods {
+  MORNING
+  NOON
+  AFTERNOON
+  EVENING
+  NIGHT
+  MIDNIGHT
+  LATENIGHT
+}
+
+enum BirdBreeds {
+  CLASSIC
+  HIBREED
+  PAKISTHANI
+  KEDERNATH
+  FAOMI
+  TIGER
+}
+
+enum ResourceCategories {
+  FEED
+  MEDICINE
+  CHICKS
+  HUSK
+  EQUIPMENT
+  UTILITIES
+  SALARY
+  TRANSPORTATION
+  MAINTENANCE
+  CLEANING_SUPPLIES
+  OTHER
+}
+
+enum SupplierSupplyCategories {
+  FEED
+  MEDICINE
+  CHICKS
+  HUSK
+  EQUIPMENT
+  UTILITIES
+  TRANSPORTATION
+  CLEANING_SUPPLIES
+  OFFICE_SUPPLIES
+  SOFTWARE
+  OTHER
+}
+
+enum AlertTypes {
+  EMPLOYEE
+  BATCH
+  FEED
+  MEDICINE
+  SYSTEM
+}
+
+enum AlertLevels {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertStatus {
+  ACTIVE
+  RESOLVED
+}
+
+enum AlertActionTypes {
+  PAY
+  REASSIGN
+  MARK_RESOLVED
+}
