@@ -14,18 +14,18 @@ datasource db {
 }
 
 model Batches {
-  id                    String               @id @default(uuid())
-  starting_date         DateTime             @default(now())
+  id                    String                 @id @default(uuid())
+  starting_date         DateTime               @default(now())
   expected_selling_date DateTime
   initial_quantity      Int
-  supplier_id           String
+  init_chicks_avg_wt    Float
   breed                 BirdBreeds
-  batch_id              String               @unique
+  batch_id              String                 @unique
   farm_code             String
   product_code          String
   sector_code           String
-  created_at            DateTime             @default(now())
-  updated_at            DateTime             @updatedAt
+  created_at            DateTime               @default(now())
+  updated_at            DateTime               @updatedAt
   batchSuppliers        BatchSuppliers[]
   DailyRecords          DailyRecords[]
   Environment           EnvironmentRecords[]
@@ -35,19 +35,21 @@ model Batches {
   transactions          StockTransactions[]
   Vaccination           Vaccinations[]
   weightRecords         WeightRecords[]
+  batchHouseAllocations BatchHouseAllocation[]
 
   @@index([farm_code, sector_code, product_code, batch_id])
 }
 
 model BatchSuppliers {
-  id            String    @id @default(uuid())
-  batch_id      String
-  supplier_id   String
-  quantity      Int // number of chicks from this supplier
-  delivery_date DateTime
-  quality_score Int
-  batch         Batches   @relation(fields: [batch_id], references: [id], onDelete: Cascade)
-  supplier      Suppliers @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
+  id               String    @id @default(uuid())
+  batch_id         String
+  supplier_id      String
+  price_per_chicks Decimal   @db.Decimal(10, 2)
+  quantity         Int // number of chicks from this supplier
+  delivery_date    DateTime
+  quality_score    Float
+  batch            Batches   @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  supplier         Suppliers @relation(fields: [supplier_id], references: [id], onDelete: Cascade)
 
   @@unique([batch_id, supplier_id]) // one row per supplier per batch
 }
@@ -62,8 +64,8 @@ model DailyRecords {
   age              Int // day of batch
   mortality_count  Int      @default(0)
   mortality_reason String?
-  feed_consumed_kg Float    @default(0)
-  water_consumed_l Float    @default(0)
+  feed_consumed_kg Decimal  @db.Decimal(10, 2)
+  water_consumed_l Decimal? @db.Decimal(10, 2)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -79,25 +81,47 @@ model WeightRecords {
   house_id         Int
   house            Houses   @relation(fields: [house_id], references: [id], onDelete: Cascade)
   age              Int // day of batch when weighed
-  average_wt_grams Float // sample average from 20 birds
+  average_wt_grams Decimal  @db.Decimal(10, 2)
   sample_size      Int
   date             DateTime
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@unique([batch_id, house_id, age])
+  @@unique([batch_id, house_id, date])
 }
 
 model Houses {
-  id         Int      @id @default(autoincrement())
-  name       String // e.g., "Brooder", "Grower 1", "Grower 2", "Grower 3"
-  number     Int? // optional numeric ID
+  id         Int       @id @default(autoincrement())
+  name       String // custom name like "Brooder 3"
+  type       HouseType
+  number     Int?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  dailyRecords          DailyRecords[]
+  weightRecords         WeightRecords[]
+  batchHouseAllocations BatchHouseAllocation[]
+}
+
+model BatchHouseAllocation {
+  id String @id @default(uuid())
+
+  batch_id String
+  batch    Batches @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+
+  house_id Int
+  house    Houses @relation(fields: [house_id], references: [id], onDelete: Cascade)
+
+  quantity Int // number of chicks allocated to this house
+
+  start_date DateTime
+  end_date   DateTime? // null = currently in this house
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  dailyRecords  DailyRecords[]
-  weightRecords WeightRecords[]
+  @@index([batch_id, house_id])
 }
 
 model Profiles {
@@ -107,21 +131,21 @@ model Profiles {
   mobile         String
   address        String
   avatar_id      String
-  online_contact ContactMethods[]
-  avatar         Avatars          @relation(fields: [avatar_id], references: [id])
-  employees      Employees[]
-  admins         Admins[]
-  customers      Customers[]
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
-  suppliers      Suppliers[]
-  doctor         Doctors[]
-  pharmacist     Pharmacists[]
+  online_contact ContactMethods[]
+  avatar         Avatars          @relation(fields: [avatar_id], references: [id])
+  employees      Employees?
+  admins         Admins?
+  customers      Customers?
+  suppliers      Suppliers?
+  pharmacist     Pharmacists?
+  doctors        Doctors?
 }
 
 model Employees {
   id           String            @id @default(uuid())
-  profile_id   String
+  profile_id   String            @unique
   profiles     Profiles          @relation(fields: [profile_id], references: [id])
   salary       Float
   joining_date DateTime          @default(now())
@@ -459,4 +483,9 @@ enum AlertActionTypes {
   PAY
   REASSIGN
   MARK_RESOLVED
+}
+
+enum HouseType {
+  BROODER
+  GROWER
 }
