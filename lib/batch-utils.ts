@@ -78,7 +78,7 @@ export async function getLastBatchNumber(
     sectorCode: string
     // productCode: string /** Currently Unnessery in small scale */
 ): Promise<number> {
-    const lastBatch = await prisma.batch.findFirst({
+    const lastBatch = await prisma.batches.findFirst({
         where: {
             farm_code: farmCode,
             sector_code: sectorCode,
