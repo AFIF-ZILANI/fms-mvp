@@ -21,6 +21,7 @@ model Batches {
   init_chicks_avg_wt    Float
   breed                 BirdBreeds
   batch_id              String                 @unique
+  status                BatchStatus            @default(RUNNING)
   farm_code             String
   product_code          String
   sector_code           String
@@ -488,4 +489,10 @@ enum AlertActionTypes {
 enum HouseType {
   BROODER
   GROWER
+}
+
+enum BatchStatus {
+  RUNNING
+  CLOSED
+  SOLD
 }

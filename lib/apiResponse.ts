@@ -31,15 +31,16 @@
  */
 import { NextResponse } from "next/server";
 import { AppError } from "./error";
+import z from "zod";
 
-export function response({
+export function response<T>({
     message,
-    data = null,
+    data,
     statusCode = 200,
     success = true,
 }: {
     message?: string;
-    data?: any;
+    data?: T;
     statusCode?: number;
     success?: boolean;
 }) {
@@ -64,6 +65,21 @@ export function errorResponse(error: unknown) {
             statusCode: error.statusCode,
             success: false,
             data: error.data || null,
+        });
+    } else if (error instanceof z.ZodError) {
+        // Map Zod errors to a cleaner format for the API response
+        const errors = error.issues.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
+        }));
+
+        return response({
+            message: "Validation failed.",
+            data: {
+                details: errors,
+            },
+            success: false,
+            statusCode: 400,
         });
     } else if (error instanceof Error) {
         // Regular JS errorƒ
