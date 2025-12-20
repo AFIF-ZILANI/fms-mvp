@@ -22,13 +22,13 @@ model Batches {
   breed                 BirdBreeds
   batch_id              String                 @unique
   status                BatchStatus            @default(RUNNING)
+  phase                 Phase
   farm_code             String
   product_code          String
   sector_code           String
   created_at            DateTime               @default(now())
   updated_at            DateTime               @updatedAt
   batchSuppliers        BatchSuppliers[]
-  DailyRecords          DailyRecords[]
   Environment           EnvironmentRecords[]
   Expenses              Expenses[]
   Medications           Medications[]
@@ -37,6 +37,7 @@ model Batches {
   Vaccination           Vaccinations[]
   weightRecords         WeightRecords[]
   batchHouseAllocations BatchHouseAllocation[]
+  events                HouseEvents[]
 
   @@index([farm_code, sector_code, product_code, batch_id])
 }
@@ -55,37 +56,32 @@ model BatchSuppliers {
   @@unique([batch_id, supplier_id]) // one row per supplier per batch
 }
 
-model DailyRecords {
-  id               String   @id @default(uuid())
-  batch_id         String
-  batch            Batches  @relation(fields: [batch_id], references: [id], onDelete: Cascade)
-  house_id         Int
-  house            Houses   @relation(fields: [house_id], references: [id], onDelete: Cascade)
-  date             DateTime
-  age              Int // day of batch
-  mortality_count  Int      @default(0)
-  mortality_reason String?
-  feed_consumed_kg Decimal  @db.Decimal(10, 2)
-  water_consumed_l Decimal? @db.Decimal(10, 2)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@unique([batch_id, house_id, date])
-  @@index([batch_id, house_id, age])
+model HouseEvents {
+  id            String    @id @default(uuid())
+  batch_id      String?
+  house_id      Int
+  event_type    EventType
+  quantity      Float
+  unit          Units
+  occurred_at   DateTime
+  created_by_id String
+  batch         Batches?  @relation(fields: [batch_id], references: [id], onDelete: SetNull)
+  house         Houses    @relation(fields: [house_id], references: [id], onDelete: Cascade)
+  created_by    Profiles  @relation(fields: [created_by_id], references: [id], onDelete: Restrict)
 }
 
 model WeightRecords {
   id               String   @id @default(uuid())
-  batch_id         String
-  batch            Batches  @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  batch_id         String?
+  batch            Batches? @relation(fields: [batch_id], references: [id], onDelete: SetNull)
   house_id         Int
   house            Houses   @relation(fields: [house_id], references: [id], onDelete: Cascade)
   age              Int // day of batch when weighed
   average_wt_grams Decimal  @db.Decimal(10, 2)
   sample_size      Int
   date             DateTime
-
+  measured_by_id String
+  measured_by Profiles @relation(fields: [measured_by_id], references: [id], onDelete: Cascade)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
@@ -96,58 +92,56 @@ model Houses {
   id         Int       @id @default(autoincrement())
   name       String // custom name like "Brooder 3"
   type       HouseType
-  number     Int?
+  number     Int
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
 
-  dailyRecords          DailyRecords[]
   weightRecords         WeightRecords[]
   batchHouseAllocations BatchHouseAllocation[]
+  events                HouseEvents[]
 }
 
 model BatchHouseAllocation {
-  id String @id @default(uuid())
-
-  batch_id String
-  batch    Batches @relation(fields: [batch_id], references: [id], onDelete: Cascade)
-
-  house_id Int
-  house    Houses @relation(fields: [house_id], references: [id], onDelete: Cascade)
-
-  quantity Int // number of chicks allocated to this house
-
+  id         String    @id @default(uuid())
+  batch_id   String
+  batch      Batches   @relation(fields: [batch_id], references: [id], onDelete: Cascade)
+  house_id   Int
+  house      Houses    @relation(fields: [house_id], references: [id], onDelete: Cascade)
+  quantity   Int // number of chicks allocated to this house
   start_date DateTime
   end_date   DateTime? // null = currently in this house
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
 
   @@index([batch_id, house_id])
 }
 
 model Profiles {
-  id             String           @id @default(uuid())
-  email          String           @unique
-  name           String
-  mobile         String
-  address        String
-  avatar_id      String
-  created_at     DateTime         @default(now())
-  updated_at     DateTime         @updatedAt
-  online_contact ContactMethods[]
-  avatar         Avatars          @relation(fields: [avatar_id], references: [id])
-  employees      Employees?
-  admins         Admins?
-  customers      Customers?
-  suppliers      Suppliers?
-  pharmacist     Pharmacists?
-  doctors        Doctors?
+  id          String        @id @default(uuid())
+  email       String?       @unique
+  name        String
+  mobile      String
+  address     String?
+  avatar_id   String?
+  role        UserRole
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+  // online_contact ContactMethods[]
+  avatar      Avatars?      @relation(fields: [avatar_id], references: [id], onDelete: SetNull)
+  employees   Employees?
+  admins      Admins?
+  customers   Customers?
+  suppliers   Suppliers?
+  pharmacists Pharmacists?
+  doctors     Doctors?
+  houseEvents HouseEvents[]
+  weightRecords WeightRecords[]
 }
 
 model Employees {
   id           String            @id @default(uuid())
   profile_id   String            @unique
-  profiles     Profiles          @relation(fields: [profile_id], references: [id])
+  profiles     Profiles          @relation(fields: [profile_id], references: [id], onDelete: Cascade)
   salary       Float
   joining_date DateTime          @default(now())
   rating       Float?            @default(0)
@@ -159,7 +153,7 @@ model Employees {
 model Admins {
   id          String         @id @default(uuid())
   profile_id  String         @unique
-  profile     Profiles       @relation(fields: [profile_id], references: [id])
+  profile     Profiles       @relation(fields: [profile_id], references: [id], onDelete: Cascade)
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
   Medications Medications[]
@@ -495,4 +489,24 @@ enum BatchStatus {
   RUNNING
   CLOSED
   SOLD
+}
+
+enum Phase {
+  BROODER
+  GROWER
+}
+
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+  CUSTOMER
+  SUPPLIER
+  PHARMACIST
+  DOCTOR
+}
+
+enum EventType {
+  FEED
+  WATER
+  MORTALITY
 }
