@@ -1,42 +1,35 @@
-import { BirdBreeds } from "@/app/generated/prisma/enums";
+import { BirdBreeds, Phase } from "@/app/generated/prisma/enums";
 
 export interface ProfileGraphProps {
-    data: {
-        aliveBirds: number[];
-        mortalityData: { day: number; mortality: number }[];
-        feedConsumedArray?: number[];
-    };
+    aliveBirdsArray: { age: number; alive: number }[];
+    mortalityArray: { day: number; mortality: number }[];
+    feedConsumedArray: { age: number; feed: number }[];
 }
 
 export interface ProfileKPIsProps {
-    data: {
-        liveBirds: number;
-        totalMortality: number;
-        mortalityRate: number;
-        totalFeedConsumed: number;
-        mortalityToday: number;
-        avgBodyWeightLatest?: number;
-        fcr?: number;
-        numberOfSeriousDeseasesHappen?: number;
-    };
+    totalAliveBirds: number;
+    totalMortality: number;
+    mortalityRate: number;
+    totalFeedConsumed: number;
+    mortalityToday: number;
+    avgBodyWeightLatest?: number;
+    fcr?: number;
+    numberOfSeriousDeseasesHappen: number | null;
 }
 
 export interface ProfileBatchDetailsProps {
-    data: {
-        batchId: string;
-        status: "BROODING" | "GROWING" | "SELLING" | "CLOSED";
-        age: number;
-        breed: string;
-        houseNo: number;
-        initialQuantity: number;
-        batchStart: string;
-        expectedSell: string;
-        supplier: string[];
-        daysToSell: number;
-        mortality24H?: number;
-        mortality48H?: number;
-        mortality72H?: number;
-    };
+    batchId: string | null;
+    phase: Phase | null;
+    age: number;
+    breed: BirdBreeds | null;
+    initialQuantity: number;
+    batchStart: Date | null;
+    expectedSell: Date | null;
+    supplier: string[];
+    daysToSell: number;
+    mortality24H?: number;
+    mortality48H?: number;
+    mortality72H?: number;
 }
 
 export interface BatchCardGroupProps {
