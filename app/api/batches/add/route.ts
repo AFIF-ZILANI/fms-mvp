@@ -1,4 +1,4 @@
-import { BatchStatus, BirdBreeds } from "@/app/generated/prisma/enums";
+import { BatchStatus, BirdBreeds, Phase } from "@/app/generated/prisma/enums";
 import { errorResponse, response } from "@/lib/apiResponse";
 import { generateBatchId, getLastBatchNumber } from "@/lib/batch-utils";
 import { throwError } from "@/lib/error";
@@ -104,21 +104,20 @@ export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
 
-        console.log(body);
-
         const runningBatches = await prisma.batches.findMany({
             where: {
-                status: BatchStatus.RUNNING
+                status: BatchStatus.RUNNING,
             },
             select: {
-                id: true
-            }
-        })
-        if (runningBatches.length > 1){
+                id: true,
+            },
+        });
+        if (runningBatches.length > 1) {
             throwError({
-                message: "Farm is running in full capacity. Can't add more batch",
-                statusCode: 400
-            })
+                message:
+                    "Farm is running in full capacity. Can't add more batch",
+                statusCode: 400,
+            });
         }
 
         // --- Execute Zod Validation ---
@@ -169,6 +168,9 @@ export async function POST(req: NextRequest) {
             productCode,
             lastBatchNo
         );
+        // Because there is only one BROODER house our farm has so, currently I hard code house ID
+        const HOUSE_ID = 3;
+        // --- * ---
 
         await prisma.$transaction(async (tx) => {
             const newBatch = await tx.batches.create({
@@ -177,11 +179,29 @@ export async function POST(req: NextRequest) {
                     breed: validatedData.breed,
                     starting_date: new Date(validatedData.startingDate),
                     init_chicks_avg_wt: validatedData.initChicksAvgWT,
+                    phase: Phase.BROODER,
                     initial_quantity: validatedData.initialQuantity,
                     farm_code: farmCode,
                     product_code: productCode,
                     sector_code: sectorCode,
                     expected_selling_date: expectedSellingDate,
+                },
+            });
+
+            await tx.batchHouseAllocation.create({
+                data: {
+                    batch: {
+                        connect: {
+                            id: newBatch.id,
+                        },
+                    },
+                    house: {
+                        connect: {
+                            id: HOUSE_ID,
+                        },
+                    },
+                    quantity: newBatch.initial_quantity,
+                    start_date: new Date(),
                 },
             });
 
