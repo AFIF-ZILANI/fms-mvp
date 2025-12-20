@@ -28,15 +28,10 @@ const chartConfig = {
 export default function FeedConsumtionChart({
   feedConsumedArray,
 }: {
-  feedConsumedArray?: number[];
+  feedConsumedArray?: {age: number, feed: number}[];
 }) {
-  // Convert to recharts usable data
-  function formatData(data: number[]) {
-    return data.map((value, index) => ({
-      age: index + 1, // day number starting from 1
-      feedConsumed: value,
-    }));
-  }
+
+  console.log(feedConsumedArray)
 
   return (
     <Card>
@@ -50,7 +45,7 @@ export default function FeedConsumtionChart({
         {feedConsumedArray && feedConsumedArray.length ? (
           <ChartContainer config={chartConfig}>
             <LineChart
-              data={formatData(feedConsumedArray)}
+              data={feedConsumedArray}
               margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -72,7 +67,7 @@ export default function FeedConsumtionChart({
               <ChartTooltip content={<ChartTooltipContent />} />
 
               <Line
-                dataKey="feedConsumed"
+                dataKey="feed"
                 type="monotone"
                 stroke="var(--chart-5)"
                 strokeWidth={3}
