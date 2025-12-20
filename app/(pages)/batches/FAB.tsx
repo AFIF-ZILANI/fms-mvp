@@ -1,77 +1,86 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Plus } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { AddWeightRecordDialog } from "@/components/fab-dialogs/add-weight-dialog";
+import { AddHouseDialog } from "@/components/fab-dialogs/add-house-dialog";
+import { AddEventDialog } from "@/components/fab-dialogs/add-event-dialog";
+import { SimpleDialogForm } from "@/components/fab-dialogs/demo-dialog";
 
 export default function FAB() {
-    const router = useRouter();
     const [open, setOpen] = useState(false);
-    const pathnames = usePathname().split("/");
+    const pathname = usePathname();
 
-    const data = [
-        {
-            label: "Record Mortality",
-            onClick: () => alert("Record Mortality clicked"),
-        },
-        {
-            label: "Record Feed Usage",
-            onClick: () => alert("Record Feed Usage clicked"),
-        },
-        {
-            label: "Add Batch",
-            onClick: () => router.push("/batches/new"),
-        },
-        {
-            label: "Record FCR",
-            onClick: () => alert("Record FCR clicked"),
-        },
-        {
-            label: "Record Weight",
-            onClick: () => alert("Record Weight clicked"),
-        },
-        {
-            label: "Update SD",
-            onClick: () => alert("Add Batch clicked"),
-        },
-    ];
+    // Close menu on route change
+    useEffect(() => {
+        setOpen(false);
+    }, [pathname]);
+
+    // Close on escape key
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && open) {
+                setOpen(false);
+            }
+        };
+
+        document.addEventListener("keydown", handleEscape);
+        return () => document.removeEventListener("keydown", handleEscape);
+    }, [open]);
 
     return (
         <>
-            {/* MENU */}
+            {/* Backdrop overlay */}
             <div
-                className={`fixed bottom-20 right-6 z-50 flex flex-col items-end gap-3 transition-all duration-200 ${
-                    open
-                        ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-                        : "opacity-0 translate-y-5 scale-0 pointer-events-none"
+                className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-40 transition-opacity duration-200 ${
+                    open ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
+                onClick={() => setOpen(false)}
+                aria-hidden="true"
+            />
+
+            {/* Action menu */}
+            <div
+                className={`fixed bottom-24 right-4 md:right-6 z-50 flex flex-col items-end gap-2 transition-all duration-300 ${
+                    open
+                        ? "opacity-100 pointer-events-auto"
+                        : "opacity-0 pointer-events-none"
+                }`}
+                role="menu"
+                aria-label="Quick actions menu"
+                aria-hidden={!open}
             >
-                {data.map((item, index) => (
-                    <Button
-                        key={index}
-                        className="w-36 shadow-lg" // <-- consistent size
-                        size="sm"
-                        variant="secondary"
-                        onClick={item.onClick}
-                    >
-                        {item.label}
-                    </Button>
-                ))}
+                <div
+                    className={`transition-all duration-300 ease-out ${
+                        open
+                            ? "translate-y-0 opacity-100"
+                            : "translate-y-4 opacity-0"
+                    } space-y-2 flex flex-col`}
+                >
+                    <AddEventDialog />
+                    <AddWeightRecordDialog />
+                    <AddHouseDialog />
+                </div>
             </div>
 
-            {/* TOGGLE BUTTON */}
+            {/* Main FAB toggle button */}
             <Button
-                size="icon-lg"
+                size="icon"
                 onClick={() => setOpen(!open)}
-                className="fixed bottom-4 right-6 rounded-full w-12 h-12 shadow-xl active:scale-95 transition"
+                className={`fixed bottom-4 right-4 md:right-6 z-50 h-14 w-14 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 ${
+                    open ? "rotate-45" : "rotate-0"
+                }`}
+                aria-label={
+                    open
+                        ? "Close quick actions menu"
+                        : "Open quick actions menu"
+                }
+                aria-expanded={open}
+                aria-haspopup="menu"
             >
-                <Plus
-                    className={
-                        open
-                            ? "rotate-45 duration-300"
-                            : "rotate-0 duration-300"
-                    }
-                />
+                <Plus className="h-6 w-6 transition-transform duration-300" />
             </Button>
         </>
     );

@@ -58,18 +58,18 @@ export function response<T>({
 }
 
 export function errorResponse(error: unknown) {
-    console.error("<|-|- [error log from 'errorResponse fn'] -|-|> ");
+    console.error("<|-|- [error log from 'errorResponse fn'] -|-|> ", error);
     if (error instanceof AppError) {
         return response({
             message: error.message,
-            statusCode: error.statusCode,
+            statusCode: error.statusCode || 500,
             success: false,
             data: error.data || null,
         });
     } else if (error instanceof z.ZodError) {
         // Map Zod errors to a cleaner format for the API response
         const errors = error.issues.map((err) => ({
-            field: err.path.join("."),
+            field: err.path.join(".") || null,
             message: err.message,
         }));
 
