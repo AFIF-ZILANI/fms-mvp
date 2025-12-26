@@ -6,6 +6,7 @@ import ProfileKPIs from "@/components/batch/profile-kpis";
 import { ChartEmptyState } from "@/components/empty-chart-error";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Phase } from "@/config/bird-man.config";
 import { useGetData } from "@/lib/api-request";
 import { BatchProfileData } from "@/types/api";
 import { RefreshCw } from "lucide-react";
@@ -84,7 +85,7 @@ export default function Page() {
             {/* BATCH DETAILS */}
             <BatchDetails
                 batchId={profileData.batch_bussiness_id}
-                phase={profileData.phase}
+                phase={profileData.phase as Phase}
                 age={profileData.age}
                 batchStart={profileData.batchStart}
                 expectedSell={profileData.expectedSell}
@@ -99,24 +100,25 @@ export default function Page() {
 
             {/* KPIs */}
             <ProfileKPIs
-                fcr={profileData.fcr}
+                fcr={profileData.genaralFcr}
                 avgBodyWeightLatest={profileData.avgBodyWeightLatest}
-                mortalityRate={profileData.mortalityRate}
+                mortalityRate={profileData.mortalityRateGenaral}
                 mortalityToday={profileData.mortalityToday}
-                totalMortality={profileData.totalMortality}
+                totalMortality={profileData.totalMortalityGenaral}
                 numberOfSeriousDeseasesHappen={
                     profileData.numberOfSeriousDeseasesHappen
                 }
-                totalFeedConsumed={profileData.totalFeedConsumed}
-                totalAliveBirds={profileData.totalAliveBirds}
+                totalFeedConsumed={profileData.totalFeedGenaral}
+                totalAliveBirds={profileData.totalAliveBirdsGenaral}
             />
 
             {/* GRAPH (Fallback Inside Component) */}
             {profileData ? (
                 <ProfileGraph
-                    aliveBirdsArray={profileData.aliveBirdsArray}
-                    mortalityArray={profileData.mortalityArray}
-                    feedConsumedArray={profileData.feedConsumedArray}
+                    aliveBirdsArray={profileData.genralAliveBirds}
+                    mortalityArray={profileData.genaralMortality}
+                    feedAndWaterConsumedArray={profileData.genaralFeedAndWater}
+                    weightRecord={profileData.genaralBodyWeight}
                 />
             ) : (
                 <ChartEmptyState message="No chart data available for this batch" />

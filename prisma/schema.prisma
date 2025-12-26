@@ -64,6 +64,7 @@ model HouseEvents {
   quantity      Float
   unit          Units
   occurred_at   DateTime
+  farm_date     DateTime @db.Date 
   created_by_id String
   batch         Batches?  @relation(fields: [batch_id], references: [id], onDelete: SetNull)
   house         Houses    @relation(fields: [house_id], references: [id], onDelete: Cascade)
@@ -71,19 +72,19 @@ model HouseEvents {
 }
 
 model WeightRecords {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   batch_id         String?
-  batch            Batches? @relation(fields: [batch_id], references: [id], onDelete: SetNull)
+  batch            Batches?  @relation(fields: [batch_id], references: [id], onDelete: SetNull)
   house_id         Int
-  house            Houses   @relation(fields: [house_id], references: [id], onDelete: Cascade)
-  age              Int // day of batch when weighed
-  average_wt_grams Decimal  @db.Decimal(10, 2)
+  house            Houses    @relation(fields: [house_id], references: [id], onDelete: Cascade)
+  average_wt_grams Decimal   @db.Decimal(10, 2)
   sample_size      Int
   date             DateTime
-  measured_by_id String
-  measured_by Profiles @relation(fields: [measured_by_id], references: [id], onDelete: Cascade)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  farm_date        DateTime @db.Date
+  measured_by_id   String
+  measured_by      Profiles  @relation(fields: [measured_by_id], references: [id], onDelete: Cascade)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
 
   @@unique([batch_id, house_id, date])
 }
@@ -117,24 +118,24 @@ model BatchHouseAllocation {
 }
 
 model Profiles {
-  id          String        @id @default(uuid())
-  email       String?       @unique
-  name        String
-  mobile      String
-  address     String?
-  avatar_id   String?
-  role        UserRole
-  created_at  DateTime      @default(now())
-  updated_at  DateTime      @updatedAt
+  id            String          @id @default(uuid())
+  email         String?         @unique
+  name          String
+  mobile        String
+  address       String?
+  avatar_id     String?
+  role          UserRole
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
   // online_contact ContactMethods[]
-  avatar      Avatars?      @relation(fields: [avatar_id], references: [id], onDelete: SetNull)
-  employees   Employees?
-  admins      Admins?
-  customers   Customers?
-  suppliers   Suppliers?
-  pharmacists Pharmacists?
-  doctors     Doctors?
-  houseEvents HouseEvents[]
+  avatar        Avatars?        @relation(fields: [avatar_id], references: [id], onDelete: SetNull)
+  employees     Employees?
+  admins        Admins?
+  customers     Customers?
+  suppliers     Suppliers?
+  pharmacists   Pharmacists?
+  doctors       Doctors?
+  houseEvents   HouseEvents[]
   weightRecords WeightRecords[]
 }
 
@@ -265,9 +266,9 @@ model SalesItems {
 }
 
 model Medications {
-  id                 String   @id @default(uuid())
+  id                 String    @id @default(uuid())
   batch_id           String
-  date               DateTime @default(now())
+  date               DateTime  @default(now())
   medication_details String
   administered_by    String
   medicine_name      String
@@ -276,17 +277,18 @@ model Medications {
   period             String?
   doctor_id          String?
   remarks            String?
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
-  administered       Admins   @relation(fields: [administered_by], references: [id])
-  batch              Batches  @relation(fields: [batch_id], references: [id])
-  doctor             Doctors? @relation(fields: [doctor_id], references: [id])
+  farm_date          DateTime? @db.Date
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+  administered       Admins    @relation(fields: [administered_by], references: [id])
+  batch              Batches   @relation(fields: [batch_id], references: [id])
+  doctor             Doctors?  @relation(fields: [doctor_id], references: [id])
 }
 
 model Vaccinations {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   batch_id        String
-  date            DateTime @default(now())
+  date            DateTime  @default(now())
   vaccine_details String?
   administered_by String
   vaccine_name    String
@@ -295,11 +297,12 @@ model Vaccinations {
   period          String?
   doctor_id       String?
   remarks         String?
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  administered    Admins   @relation(fields: [administered_by], references: [id])
-  batch           Batches  @relation(fields: [batch_id], references: [id])
-  doctor          Doctors? @relation(fields: [doctor_id], references: [id])
+  farm_date       DateTime? @db.Date
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  administered    Admins    @relation(fields: [administered_by], references: [id])
+  batch           Batches   @relation(fields: [batch_id], references: [id])
+  doctor          Doctors?  @relation(fields: [doctor_id], references: [id])
 }
 
 model Sales {
@@ -339,6 +342,7 @@ model EnvironmentRecords {
   ammonia_ppm      Float
   co2_ppm          Float
   air_pressure_hpa Float
+  farm_date        DateTime?   @db.Date
   time_period      TimePeriods
   recorded_at      DateTime    @default(now())
   batch            Batches     @relation(fields: [batch_id], references: [id])
@@ -362,7 +366,8 @@ model Alerts {
   related_id  String? // link to employee_id, batch_id, etc.
   action_type AlertActionTypes? // pay | assign | mark_resolved etc.
   created_at  DateTime          @default(now())
-  resolved_at DateTime?
+  issued_at   DateTime?         @db.Date
+  resolved_at DateTime?         @db.Date
 }
 
 enum EmployeeRoleNames {

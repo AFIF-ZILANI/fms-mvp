@@ -1,16 +1,35 @@
+const FARM_DAY_START_HOUR = 4; // 4:00 AM
+// const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+export function getFarmDateTime(input: Date | string): Date {
+    const d = new Date(input);
+
+    // If before 4 AM → belongs to previous farm day
+    if (d.getHours() < FARM_DAY_START_HOUR) {
+        d.setDate(d.getDate() - 1);
+    }
+
+    d.setHours(0, 0, 0, 0);
+
+    return d;
+}
+
+export function getFarmDate(date: Date | string): string {
+    const d = getFarmDateTime(date);
+    return d.toISOString().slice(0, 10);
+}
+
 export function getBatchAgeInDays(
-    startDate: Date | string,
-    endDate?: Date | string
+    placementDate: Date | string,
+    currentDate: Date = new Date()
 ): number {
-    const start = new Date(startDate);
-    const end = endDate ? new Date(endDate) : new Date();
+    const startFarmDate = new Date(getFarmDate(placementDate));
+    const currentFarmDate = new Date(getFarmDate(currentDate));
 
-    // Normalize to midnight to avoid timezone bugs
-    start.setHours(0, 0, 0, 0);
-    end.setHours(0, 0, 0, 0);
+    const diffMs = currentFarmDate.getTime() - startFarmDate.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    const diffMs = end.getTime() - start.getTime();
-    return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+    return diffDays + 1; // Day 1-based
 }
 
 export function getBatchAgeInWeeks(startDate: Date | string): number {

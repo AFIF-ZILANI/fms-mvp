@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { AddWeightRecordDialog } from "@/components/fab-dialogs/add-weight-dialog";
 import { AddHouseDialog } from "@/components/fab-dialogs/add-house-dialog";
 import { AddEventDialog } from "@/components/fab-dialogs/add-event-dialog";
-import { SimpleDialogForm } from "@/components/fab-dialogs/demo-dialog";
+import { AddBatchDialog } from "@/components/fab-dialogs/add-batch-dialog";
 
 export default function FAB() {
     const [open, setOpen] = useState(false);
@@ -15,20 +15,21 @@ export default function FAB() {
 
     // Close menu on route change
     useEffect(() => {
-        setOpen(false);
+        const id = setTimeout(() => setOpen(false), 0);
+        return () => clearTimeout(id);
     }, [pathname]);
 
-    // Close on escape key
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && open) {
-                setOpen(false);
-            }
-        };
+    // // Close on escape key
+    // useEffect(() => {
+    //     const handleEscape = (e: KeyboardEvent) => {
+    //         if (e.key === "Escape" && open) {
+    //             setOpen(false);
+    //         }
+    //     };
 
-        document.addEventListener("keydown", handleEscape);
-        return () => document.removeEventListener("keydown", handleEscape);
-    }, [open]);
+    //     document.addEventListener("keydown", handleEscape);
+    //     return () => document.removeEventListener("keydown", handleEscape);
+    // }, [open]);
 
     return (
         <>
@@ -59,6 +60,7 @@ export default function FAB() {
                             : "translate-y-4 opacity-0"
                     } space-y-2 flex flex-col`}
                 >
+                    <AddBatchDialog />
                     <AddEventDialog />
                     <AddWeightRecordDialog />
                     <AddHouseDialog />

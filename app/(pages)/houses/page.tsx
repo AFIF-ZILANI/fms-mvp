@@ -38,6 +38,10 @@ type House = {
     } | null;
 };
 
+interface HouseResponse {
+    data: House[];
+}
+
 /* ---------------------------------- */
 /* Page */
 /* ---------------------------------- */
@@ -45,7 +49,7 @@ type House = {
 export default function HousesPage() {
     const { data, isFetching } = useGetData("/houses/fetch");
 
-    const houses: House[] = (data as any)?.data ?? [];
+    const houses: House[] = (data as HouseResponse)?.data ?? [];
 
     /* ---------- KPI ---------- */
 

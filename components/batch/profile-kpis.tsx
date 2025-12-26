@@ -8,6 +8,7 @@ import {
 } from "../ui/card";
 import CountUp from "../effects/count-up";
 import { ProfileKPIsProps } from "@/types";
+import { formatFeedInBags } from "@/lib/bird-man";
 
 export default function ProfileKPIs({
     totalAliveBirds,
@@ -37,7 +38,7 @@ export default function ProfileKPIs({
         },
         {
             title: "Total Feed Consumed (kg)",
-            value: totalFeedConsumed,
+            value: formatFeedInBags(totalFeedConsumed),
             description: "Total feed consumed by the birds",
         },
         {

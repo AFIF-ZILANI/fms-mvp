@@ -2,174 +2,163 @@
 
 import * as React from "react";
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
+    AudioWaveform,
+    Command,
+    FileText,
+    GalleryVerticalEnd,
+    House,
+    Layers,
+    Truck,
 } from "lucide-react";
 
 import { NavMain } from "@/components/navigation/nav-main";
-import { NavProjects } from "@/components/navigation/nav-projects";
+// import { NavProjects } from "@/components/navigation/nav-projects";
 import { NavUser } from "@/components/navigation/nav-user";
 import { TeamSwitcher } from "@/components/navigation/team-switcher";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarRail,
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarRail,
 } from "@/components/ui/sidebar";
 
 // This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "",
-  },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
+    user: {
+        name: "afifzilani",
+        email: "afifzilani4566@gmail.com",
+        avatar: "https://github.com/AFIF-ZILANI.png",
     },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
-  navMain: [
-    {
-      title: "Batches",
-      url: "/batches",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
+    teams: [
         {
-          title: "History",
-          url: "batc",
+            name: "ZeroD Farms Ltd.",
+            logo: GalleryVerticalEnd,
+            plan: "Enterprise",
         },
         {
-          title: "Starred",
-          url: "#",
+            name: "ZeroD Farms Ltd.",
+            logo: AudioWaveform,
+            plan: "Startup",
         },
         {
-          title: "Settings",
-          url: "#",
+            name: "ZeroD Ltd.",
+            logo: Command,
+            plan: "Free",
         },
-      ],
-    },
-    {
-      title: "Houses",
-      url: "/houses",
-      icon: Bot,
-      items: [
+    ],
+    navMain: [
         {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
+            title: "Batches",
+            url: "/batches",
+            icon: Layers,
+            isActive: true,
+            items: [
+                {
+                    title: "History",
+                    url: "batc",
+                },
+            ],
         },
         {
-          title: "Get Started",
-          url: "#",
+            title: "Houses",
+            url: "/houses",
+            icon: House,
+            items: [
+                {
+                    title: "Genesis",
+                    url: "#",
+                },
+                {
+                    title: "Explorer",
+                    url: "#",
+                },
+                {
+                    title: "Quantum",
+                    url: "#",
+                },
+            ],
         },
         {
-          title: "Tutorials",
-          url: "#",
+            title: "Suppliers",
+            url: "/suppliers",
+            icon: Truck,
+            items: [
+                {
+                    title: "Introduction",
+                    url: "#",
+                },
+                {
+                    title: "Get Started",
+                    url: "#",
+                },
+                {
+                    title: "Tutorials",
+                    url: "#",
+                },
+                {
+                    title: "Changelog",
+                    url: "#",
+                },
+            ],
         },
         {
-          title: "Changelog",
-          url: "#",
+            title: "Inventory",
+            url: "/inventory",
+            icon: FileText,
+            items: [
+                {
+                    title: "General",
+                    url: "#",
+                },
+                {
+                    title: "Team",
+                    url: "#",
+                },
+                {
+                    title: "Billing",
+                    url: "#",
+                },
+                {
+                    title: "Limits",
+                    url: "#",
+                },
+            ],
         },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
+    ],
+    // projects: [
+    //     {
+    //         name: "Design Engineering",
+    //         url: "#",
+    //         icon: Frame,
+    //     },
+    //     {
+    //         name: "Sales & Marketing",
+    //         url: "#",
+    //         icon: PieChart,
+    //     },
+    //     {
+    //         name: "Travel",
+    //         url: "#",
+    //         icon: Map,
+    //     },
+    // ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-      </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
-  );
+    return (
+        <Sidebar collapsible="icon" {...props}>
+            <SidebarHeader>
+                <TeamSwitcher teams={data.teams} />
+            </SidebarHeader>
+            <SidebarContent>
+                <NavMain items={data.navMain} />
+                {/* <NavProjects projects={data.projects} /> */}
+            </SidebarContent>
+            <SidebarFooter>
+                <NavUser user={data.user} />
+            </SidebarFooter>
+            <SidebarRail />
+        </Sidebar>
+    );
 }

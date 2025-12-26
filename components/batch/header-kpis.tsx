@@ -8,72 +8,60 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import {
-    AlertTriangle,
     Wheat,
     Skull,
-    Calendar,
     Layers,
     Bird,
+    Droplets,
+    Activity,
 } from "lucide-react";
-import CountUp from "../effects/count-up";
-import { BatchCardGroupProps } from "@/types";
-import { BatchOverviewData } from "@/types/api";
+// import CountUp from "../effects/count-up";
+import { BatchOverviewToday } from "@/types/api";
 
-export default function GeneralCardGroup({
-    brooder,
-    grower,
-}: BatchOverviewData) {
+type BatchGenaralCardGroupProp = {
+    data: BatchOverviewToday;
+};
+export default function GeneralCardGroup({ data }: BatchGenaralCardGroupProp) {
     const metrics = [
         {
             title: "Active Batches",
             icon: Layers,
-            value: {
-                grower: grower.activeBatches,
-                brooder: brooder.activeBatches,
-            },
-            description: "Total number of active batches on the farm.",
+            value: data.activeBatches,
+            description: "Number of batches currently running on the farm",
         },
         {
-            title: "Live Birds",
+            title: "Alive Birds",
             icon: Bird,
-            value: { grower: grower.liveBirds, brooder: brooder.liveBirds },
-            description: "Current live bird count",
+            value: data.aliveBirds,
+            description: "Total live birds across all active batches",
         },
         {
             title: "Mortality Today",
             icon: Skull,
-            value: {
-                grower: grower.mortalityToday,
-                brooder: brooder.mortalityToday,
-            },
-            description: "Mortality count for today",
+            value: `${data.mortality} (${data.mortalityRate?.toFixed(2)}%)`,
+            description: "Birds lost today across all running batches",
         },
         {
-            title: "Age of Batches (days)",
-            icon: Calendar,
-            value: { grower: grower.birdsAge, brooder: brooder.birdsAge },
-            description: "Average age of adult/child batches",
-        },
-        {
-            title: "Total Mortality",
-            icon: AlertTriangle,
-            value: {
-                grower: grower.totalMortality,
-                brooder: brooder.totalMortality,
-            },
-            description: "Cumulative mortality count",
-        },
-
-        {
-            title: "Feed Consumed Today (kg)",
+            title: "Feed Consumed Today",
             icon: Wheat,
-            value: {
-                grower: grower.feedConsumedToday,
-                brooder: brooder.feedConsumedToday,
-            },
-            description: "Feed consumed by adult/child birds today",
+            value: data.feedConsumed,
+            description: "Total feed consumed today (CARB)",
+        },
+        {
+            title: "Water Consumed Today",
+            icon: Droplets,
+            value: data.waterConsumed,
+            description: "Total water consumed today (CARB)",
+        },
+        {
+            title: "Water : Feed Ratio",
+            icon: Activity,
+            value: data.waterFeedRatio?.toFixed(2),
+            description:
+                "Water-to-feed ratio for today (health & stress indicator)",
         },
     ];
+
     return (
         <div className="grid grid-cols-1  md:grid-cols-3 gap-4">
             {metrics.map((metric, i) => (
@@ -82,46 +70,8 @@ export default function GeneralCardGroup({
                     className="rounded-2xl border border-gray-200 shadow-sm"
                 >
                     <CardContent>
-                        <div className="bg-muted p-4 rounded-xl flex flex-col gap-4">
-                            {/* Grower */}
-                            <div className="flex items-center justify-between border-b pb-3">
-                                <span className="text-muted-foreground font-medium">
-                                    Grower
-                                </span>
-                                {metric?.value?.grower ? (
-                                    <CountUp
-                                        from={0}
-                                        to={metric.value.grower}
-                                        duration={1}
-                                        separator=","
-                                        className="text-xl font-bold text-primary"
-                                    />
-                                ) : (
-                                    <span className="text-xl font-bold text-muted-foreground">
-                                        N/A
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Brooder */}
-                            <div className="flex items-center justify-between pt-1">
-                                <span className="text-muted-foreground font-medium">
-                                    Brooder
-                                </span>
-                                {metric?.value?.brooder ? (
-                                    <CountUp
-                                        from={0}
-                                        to={metric.value.brooder}
-                                        duration={1}
-                                        separator=","
-                                        className="text-xl font-bold text-primary"
-                                    />
-                                ) : (
-                                    <span className="text-xl font-bold text-muted-foreground">
-                                        N/A
-                                    </span>
-                                )}
-                            </div>
+                        <div className="text-2xl text-primary font-bold">
+                            {!metric.value ? "N/A" : metric.value}
                         </div>
                     </CardContent>
                     <CardHeader className="pb-2">

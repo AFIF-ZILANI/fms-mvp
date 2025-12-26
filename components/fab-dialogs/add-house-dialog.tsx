@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { HouseType } from "@/app/generated/prisma/enums";
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -63,13 +62,13 @@ export function AddHouseDialog() {
         if (isSuccess) {
             toast.success("Weight record saved successfully!");
             form.reset();
-            setDialogOpen(false);
+            // setDialogOpen(false);
         }
 
         if (isError && error) {
             toast.error(error.message || "Failed to save weight record");
         }
-    }, [isSuccess, isError, error]);
+    }, [isSuccess, isError, error, form]);
 
     const onSubmit = (values: AddHouseSchema) => {
         console.log(values);

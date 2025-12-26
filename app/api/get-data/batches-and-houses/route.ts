@@ -1,5 +1,4 @@
 import { BatchStatus } from "@/app/generated/prisma/enums";
-import { formatBatchDate } from "@/components/fab-dialogs/add-weight-dialog";
 import { errorResponse, response } from "@/lib/apiResponse";
 import { getBatchAgeInDays } from "@/lib/date-time";
 import prisma from "@/lib/prisma";

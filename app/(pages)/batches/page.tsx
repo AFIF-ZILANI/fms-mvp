@@ -73,20 +73,20 @@ export default function Page() {
                         Overview of key performance indicators for active
                         batches
                     </p>
-                    <Button onClick={() => refetch()} variant={"outline"} size={"sm"}>
+                    <Button
+                        onClick={() => refetch()}
+                        variant={"outline"}
+                        size={"sm"}
+                    >
                         <RefreshCw /> Fresh Data
                     </Button>
                 </div>
                 <Separator className="my-4" />
             </div>
-            <GeneralCardGroup
-                brooder={batchData.brooder}
-                grower={batchData.grower}
-            />
+            <GeneralCardGroup data={batchData.todaysData} />
             <div className="mt-8">
                 <BatchOverviewGrid
-                    brooder={batchData.brooder}
-                    grower={batchData.grower}
+                    batchSpecificData={batchData.batchSpecificData}
                 />
             </div>
         </div>

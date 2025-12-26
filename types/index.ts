@@ -1,9 +1,16 @@
-import { BirdBreeds, Phase } from "@/app/generated/prisma/enums";
+import { BirdBreeds } from "@/app/generated/prisma/enums";
+import { Phase } from "@/config/bird-man.config";
 
 export interface ProfileGraphProps {
     aliveBirdsArray: { age: number; alive: number }[];
     mortalityArray: { day: number; mortality: number }[];
-    feedConsumedArray: { age: number; feed: number }[];
+    feedAndWaterConsumedArray: { age: number; feed: number; water: number }[];
+    weightRecord: {
+        week: number;
+        avgWeight: number;
+        sampleSize: number;
+        age: number;
+    }[];
 }
 
 export interface ProfileKPIsProps {
@@ -96,4 +103,26 @@ export type IBatch = {
             deliveryDate: Date;
         },
     ];
+};
+
+export type HouseEventType = "FEED" | "WATER" | "MORTALITY";
+export const EVENT_UNIT_MAP = {
+    FEED: {
+        canonical: "KG",
+        uiUnits: ["KG", "BAG"],
+    },
+    WATER: {
+        canonical: "LITER",
+        uiUnits: ["LITER"],
+    },
+    MORTALITY: {
+        canonical: "BIRD",
+        uiUnits: ["BIRD"],
+    },
+} as const;
+
+export type SupplierOption = {
+    id: string;
+    name: string;
+    company?: string;
 };

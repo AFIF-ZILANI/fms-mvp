@@ -1,6 +1,12 @@
 "use client";
 
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import {
+    CartesianGrid,
+    Line,
+    LineChart,
+    XAxis,
+    YAxis,
+} from "recharts";
 import {
     Card,
     CardContent,
@@ -16,35 +22,41 @@ import {
 } from "@/components/ui/chart";
 import { ChartEmptyState } from "../empty-chart-error";
 
-export const description = "Alive birds chart (age in days)";
+export const description = "Feed chart (age in days)";
 
 const chartConfig = {
-    alive: {
-        label: "Alive Birds",
+    weight: {
+        label: "Weight",
         color: "var(--chart-2)",
     },
 } satisfies ChartConfig;
 
-export default function AliveBirdsChart({
-    aliveBirdsArray,
+export default function WeightRecordChart({
+    data,
 }: {
-    aliveBirdsArray: { age: number; alive: number }[];
+    data?: {
+        week: number;
+        avgWeight: number;
+        sampleSize: number;
+        age: number;
+    }[];
 }) {
+    console.log(data);
+
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Alive Birds Chart</CardTitle>
+                <CardTitle>Feed Consumption</CardTitle>
                 <CardDescription>
-                    Showing alive birds count by age (days)
+                    Showing feed consumption by age (days)
                 </CardDescription>
             </CardHeader>
-
             <CardContent>
-                {aliveBirdsArray && aliveBirdsArray.length ? (
+                {data && data.length ? (
                     <ChartContainer config={chartConfig}>
                         <LineChart
-                            data={aliveBirdsArray}
-                            margin={{ top: 10, right: 20, left: 0, bottom: 20 }}
+                            data={data}
+                            margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
                         >
                             <CartesianGrid
                                 strokeDasharray="3 3"
@@ -57,9 +69,9 @@ export default function AliveBirdsChart({
                                 axisLine={false}
                                 tickMargin={8}
                                 label={{
-                                    value: "Age",
+                                    value: "Age (days)",
                                     position: "insideBottom",
-                                    offset: -10,
+                                    offset: -7,
                                 }}
                             />
 
@@ -67,18 +79,17 @@ export default function AliveBirdsChart({
                                 tickLine={false}
                                 axisLine={false}
                                 tickMargin={8}
-                                width={50}
                             />
 
                             <ChartTooltip content={<ChartTooltipContent />} />
 
                             <Line
-                                dataKey="alive"
+                                dataKey="avgWeight"
                                 type="monotone"
-                                stroke="var(--chart-5)"
+                                stroke="var(--chart-1)"
                                 strokeWidth={3}
                                 dot={false}
-                                activeDot={{ r: 5 }}
+                                activeDot={{ r: 4 }}
                             />
                         </LineChart>
                     </ChartContainer>

@@ -12,7 +12,10 @@ import {
 import { Button } from "../ui/button";
 import { Plus, RefreshCcw, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { AddHouseEvent, addHouseEventSchema } from "@/schemas/event.schema";
+import {
+    addHouseEventSchema,
+    HouseEventFormInput,
+} from "@/schemas/event.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useGetData, usePostData } from "@/lib/api-request";
 import {
@@ -34,12 +37,26 @@ import {
 import { Input } from "../ui/input";
 import { toast } from "sonner";
 import { Spinner } from "../ui/spinner";
-import { EventTypeArr, UnitTypeArr } from "@/types/enum";
+import { EventTypeArr, HouseEventEnum, HouseEventUnitEnum } from "@/types/enum";
+import { EVENT_UNIT_MAP, HouseEventType } from "@/types";
+
+interface HelperResponse {
+    data: {
+        batches: { id: string; label: string }[];
+        houses: { id: number; label: string }[];
+    };
+}
 
 export function AddEventDialog() {
     const [dialogOpen, setDialogOpen] = useState(false);
-    const form = useForm<AddHouseEvent>({
+    const form = useForm<HouseEventFormInput>({
         resolver: zodResolver(addHouseEventSchema),
+        defaultValues: {
+            batchId: "",
+            houseId: undefined,
+            quantity: undefined,
+            eventType: undefined,
+        },
     });
 
     /* ---------------- Data ---------------- */
@@ -55,20 +72,26 @@ export function AddEventDialog() {
     } = usePostData("/create/record/event");
 
     const batches: { id: string; label: string }[] =
-        (helperData as any)?.data?.batches ?? [];
+        (helperData as HelperResponse)?.data?.batches ?? [];
 
     const houses: { id: number; label: string }[] =
-        (helperData as any)?.data?.houses ?? [];
+        (helperData as HelperResponse)?.data?.houses ?? [];
     console.log(batches);
     console.log(houses);
 
     /* ---------------- Effects ---------------- */
 
     useEffect(() => {
+        if (batches.length === 1) {
+            form.setValue("batchId", batches[0].id);
+        }
+    }, [batches, form]);
+
+    useEffect(() => {
         if (isSuccess) {
             toast.success("House event saved successfully!");
             form.reset();
-            setDialogOpen(false);
+            // setDialogOpen(false);
         }
 
         if (isError && error) {
@@ -80,13 +103,46 @@ export function AddEventDialog() {
 
     /* ---------------- Submit ---------------- */
 
-    const onSubmit = (values: AddHouseEvent) => {
-        mutate(values);
+    const onSubmit = (values: HouseEventFormInput) => {
+        console.log(values);
+        const normalizedQuantity =
+            values.eventType === "FEED"
+                ? normalizeQuantity(
+                      values.quantity as number,
+                      values.unit as "KG" | "BAG"
+                  )
+                : values.quantity;
+        mutate({
+            ...values,
+            quantity: normalizedQuantity,
+            unit: EVENT_UNIT_MAP[values.eventType].canonical,
+        });
     };
 
     const onError = (errors: unknown) => {
         console.log("VALIDATION ERRORS", errors);
     };
+
+    const handleEventTypeChange = (type: HouseEventType) => {
+        const config = EVENT_UNIT_MAP[type];
+
+        form.setValue("eventType", type as HouseEventEnum);
+        form.setValue("unit", config.canonical as HouseEventUnitEnum);
+        form.setValue("quantity", 0);
+    };
+    const BAG_WEIGHT_KG = 50;
+
+    function normalizeQuantity(quantity: number, unit: "KG" | "BAG"): number {
+        if (unit === "BAG") {
+            return quantity * BAG_WEIGHT_KG;
+        }
+        return quantity;
+    }
+
+    const selectedEventType = form.watch("eventType");
+    const allowedUnits = selectedEventType
+        ? EVENT_UNIT_MAP[selectedEventType].uiUnits
+        : [];
 
     return (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -203,7 +259,11 @@ export function AddEventDialog() {
                                                     ? field.value.toString()
                                                     : ""
                                             }
-                                            onValueChange={field.onChange}
+                                            onValueChange={(v) =>
+                                                handleEventTypeChange(
+                                                    v as HouseEventType
+                                                )
+                                            }
                                         >
                                             <FormControl>
                                                 <SelectTrigger className="w-full">
@@ -232,7 +292,9 @@ export function AddEventDialog() {
                             />
 
                             <div className="grid grid-cols-7 gap-4">
-                                <div className="col-span-4">
+                                <div
+                                    className={`${allowedUnits.length > 1 ? "col-span-4" : "col-span-7"}`}
+                                >
                                     {/* Event Quantity */}
                                     <FormField
                                         control={form.control}
@@ -245,30 +307,35 @@ export function AddEventDialog() {
                                                 <FormControl>
                                                     <Input
                                                         type="text"
-                                                        inputMode="numeric"
+                                                        inputMode="decimal"
                                                         placeholder="e.g. 100"
-                                                        pattern="[0-9]*"
                                                         className="pr-12"
-                                                        {...field}
                                                         value={
-                                                            field.value || ""
+                                                            (field.value as string) ??
+                                                            ""
                                                         }
                                                         onChange={(e) => {
-                                                            const val =
+                                                            let val =
                                                                 e.target.value;
-                                                            // Allow only digits
+
+                                                            // Prefix 0 if starts with "."
                                                             if (
-                                                                /^\d*$/.test(
+                                                                val.startsWith(
+                                                                    "."
+                                                                )
+                                                            ) {
+                                                                val = `0${val}`;
+                                                            }
+
+                                                            // Allow valid decimal typing only
+                                                            if (
+                                                                /^\d*\.?\d*$/.test(
                                                                     val
                                                                 )
                                                             ) {
                                                                 field.onChange(
-                                                                    val === ""
-                                                                        ? undefined
-                                                                        : Number(
-                                                                              val
-                                                                          )
-                                                                );
+                                                                    val
+                                                                ); // ✅ STRING ONLY
                                                             }
                                                         }}
                                                     />
@@ -283,50 +350,61 @@ export function AddEventDialog() {
                                     />
                                 </div>
 
-                                <div className="col-span-3">
-                                    {/* Unit */}
-                                    <FormField
-                                        control={form.control}
-                                        name="unit"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Unit *</FormLabel>
-                                                <Select
-                                                    value={
-                                                        field.value
-                                                            ? field.value.toString()
-                                                            : ""
-                                                    }
-                                                    onValueChange={
-                                                        field.onChange
-                                                    }
-                                                >
-                                                    <FormControl>
-                                                        <SelectTrigger className="w-full">
-                                                            <SelectValue placeholder="Select unit" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        {UnitTypeArr.map(
-                                                            (unit, index) => (
-                                                                <SelectItem
-                                                                    key={index}
-                                                                    value={unit}
-                                                                >
-                                                                    {unit}
-                                                                </SelectItem>
-                                                            )
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormDescription>
-                                                    Quantity Unit
-                                                </FormDescription>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
+                                {allowedUnits.length > 1 && (
+                                    <div className="col-span-3">
+                                        {/* Unit */}
+                                        <FormField
+                                            control={form.control}
+                                            name="unit"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>
+                                                        Unit *
+                                                    </FormLabel>
+                                                    <Select
+                                                        value={
+                                                            field.value
+                                                                ? field.value.toString()
+                                                                : ""
+                                                        }
+                                                        onValueChange={
+                                                            field.onChange
+                                                        }
+                                                    >
+                                                        <FormControl>
+                                                            <SelectTrigger className="w-full">
+                                                                <SelectValue placeholder="Select unit" />
+                                                            </SelectTrigger>
+                                                        </FormControl>
+                                                        <SelectContent>
+                                                            {allowedUnits.map(
+                                                                (
+                                                                    unit,
+                                                                    index
+                                                                ) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            index
+                                                                        }
+                                                                        value={
+                                                                            unit
+                                                                        }
+                                                                    >
+                                                                        {unit}
+                                                                    </SelectItem>
+                                                                )
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <FormDescription>
+                                                        Quantity Unit
+                                                    </FormDescription>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Tip */}

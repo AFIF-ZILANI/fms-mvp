@@ -1,52 +1,36 @@
 import { errorResponse, response } from "@/lib/apiResponse";
+import {
+    getFeedConsumedToday,
+    getMortalitiesToday,
+    getPhaseByAge,
+    getWaterConsumedToday,
+} from "@/lib/bird-man";
 import { getBatchAgeInDays } from "@/lib/date-time";
 import { throwError } from "@/lib/error";
 import prisma from "@/lib/prisma";
-import { BatchOverviewData, PhaseData } from "@/types/api";
+import { BatchOverviewData, BatchSpecific } from "@/types/api";
 
 export async function GET() {
     try {
         const data: BatchOverviewData = {
-            brooder: {
+            todaysData: {
+                feedConsumed: 0,
+                mortality: 0,
+                waterConsumed: 0,
+                aliveBirds: 0, // end-of-day
                 activeBatches: 0,
-                totalMortality: 0,
-                mortalityToday: 0,
-                liveBirds: 0,
-                feedConsumedToday: 0,
-                birdsAge: null,
-                batchId: null,
-                batch_bussiness_id: null,
-                totalFeedConsumed: 0,
+                mortalityRate: null, // %
+                waterFeedRatio: null,
             },
-            grower: {
-                activeBatches: 0,
-                totalMortality: 0,
-                mortalityToday: 0,
-                liveBirds: 0,
-                feedConsumedToday: 0,
-                birdsAge: null,
-                batchId: null,
-                batch_bussiness_id: null,
-                totalFeedConsumed: 0,
-            },
+            batchSpecificData: [],
         };
-
-        // Date range for today
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-
-        const endOfToday = new Date();
-        endOfToday.setHours(23, 59, 59, 999);
 
         // Fetch active batches
         const batches = await prisma.batches.findMany({
-            where: {
-                status: "RUNNING",
-                phase: { in: ["BROODER", "GROWER"] },
-            },
+            where: { status: "RUNNING" },
         });
 
-        if (batches.length === 0) {
+        if (!batches.length) {
             throwError({
                 message: "No active batches",
                 statusCode: 400,
@@ -55,69 +39,102 @@ export async function GET() {
 
         const batchIds = batches.map((b) => b.id);
 
-        // Fetch all events in ONE query
+        // Fetch all related events in one query
         const events = await prisma.houseEvents.findMany({
             where: {
                 batch_id: { in: batchIds },
             },
         });
 
+        let aliveAtStartOfTodayCARB = 0;
+
         for (const batch of batches) {
-            let target: PhaseData;
-
-            if (batch.phase === "BROODER") {
-                target = data.brooder;
-            } else if (batch.phase === "GROWER") {
-                target = data.grower;
-            } else {
-                // Should never happen due to query filter — defensive anyway
-                continue;
-            }
-
-            target.activeBatches += 1;
-            target.batchId ??= batch.id;
-            target.batch_bussiness_id ??= batch.batch_id;
-            target.birdsAge ??= getBatchAgeInDays(batch.starting_date);
+            const birdAge = getBatchAgeInDays(batch.starting_date);
+            const target: BatchSpecific = {
+                batch_bussiness_id: batch.batch_id,
+                batchId: batch.id,
+                birdsAge: getBatchAgeInDays(batch.starting_date),
+                feedConsumedToday: 0,
+                waterConsumedToday: 0,
+                aliveBirds: 0,
+                mortalityToday: 0,
+                phase: null,
+            };
 
             const batchEvents = events.filter((e) => e.batch_id === batch.id);
 
+            // const feeds = batchEvents.filter((e) => e.event_type === "FEED");
             const mortalities = batchEvents.filter(
                 (e) => e.event_type === "MORTALITY"
             );
 
-            const feeds = batchEvents.filter((e) => e.event_type === "FEED");
-
-            const mortalityToday = mortalities.filter(
-                (e) =>
-                    e.occurred_at >= startOfToday && e.occurred_at <= endOfToday
-            );
-
-            const feedToday = feeds.filter(
-                (e) =>
-                    e.occurred_at >= startOfToday && e.occurred_at <= endOfToday
-            );
-
-            target.totalMortality += mortalities.reduce(
-                (sum, e) => sum + (e.quantity ?? 0),
-                0
-            );
-            target.mortalityToday += mortalityToday.reduce(
+            // TOTAL mortality (lifetime)
+            const totalMortality = mortalities.reduce(
                 (sum, e) => sum + (e.quantity ?? 0),
                 0
             );
 
-            target.liveBirds += batch.initial_quantity - target.totalMortality;
+            // TODAY mortality
+            target.mortalityToday = getMortalitiesToday(batchEvents);
 
-            target.totalFeedConsumed += feeds.reduce(
-                (sum, e) => sum + (e.quantity ?? 0),
-                0
-            );
+            // Alive at END of today
+            target.aliveBirds = batch.initial_quantity - totalMortality;
 
-            target.feedConsumedToday += feedToday.reduce(
-                (sum, e) => sum + (e.quantity ?? 0),
-                0
-            );
+            // Alive at START of today (for mortality rate)
+            const aliveStartOfDay =
+                batch.initial_quantity -
+                (totalMortality - target.mortalityToday);
+
+            aliveAtStartOfTodayCARB += aliveStartOfDay;
+
+            // Feed
+            target.feedConsumedToday = getFeedConsumedToday(batchEvents);
+
+            // Water
+            target.waterConsumedToday = getWaterConsumedToday(batchEvents);
+
+            target.phase = getPhaseByAge(birdAge);
+            target.birdsAge = birdAge;
+
+            data.batchSpecificData.push(target);
         }
+
+        // ---- CARB AGGREGATES ----
+
+        data.todaysData.activeBatches = data.batchSpecificData.length;
+
+        data.todaysData.aliveBirds = data.batchSpecificData.reduce(
+            (sum, b) => sum + b.aliveBirds,
+            0
+        );
+
+        data.todaysData.feedConsumed = data.batchSpecificData.reduce(
+            (sum, b) => sum + b.feedConsumedToday,
+            0
+        );
+
+        data.todaysData.waterConsumed = data.batchSpecificData.reduce(
+            (sum, b) => sum + b.waterConsumedToday,
+            0
+        );
+
+        data.todaysData.mortality = data.batchSpecificData.reduce(
+            (sum, b) => sum + b.mortalityToday,
+            0
+        );
+
+        // Mortality rate (%)
+        data.todaysData.mortalityRate =
+            aliveAtStartOfTodayCARB > 0
+                ? (data.todaysData.mortality / aliveAtStartOfTodayCARB) * 100
+                : null;
+
+        // Water : Feed ratio
+        data.todaysData.waterFeedRatio =
+            data.todaysData.feedConsumed > 0
+                ? data.todaysData.waterConsumed / data.todaysData.feedConsumed
+                : null;
+
         console.log(data);
 
         return response({

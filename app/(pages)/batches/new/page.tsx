@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { format } from "date-fns";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,16 +43,18 @@ export type SupplierOption = {
     name: string;
     company?: string;
 };
+interface SuppliersResponse {
+    data: SupplierOption[];
+}
 
 export default function AddBatchPage() {
     const router = useRouter();
-    const [suppliersList, setSuppliersList] = useState<SupplierOption[]>([]);
     const { mutate, isSuccess, isPending, isError, error } =
         usePostData("/batches/add");
     const {
         data,
-        isError: isGetSupplierError,
-        isFetched,
+        // isError: isGetSupplierError,
+        // isFetched,
         isFetching,
     } = useGetData("/suppliers/get-all-suppliers?category=CHICKS");
 
@@ -78,12 +80,8 @@ export default function AddBatchPage() {
         name: "suppliers",
     });
 
-    useEffect(() => {
-        if (!isGetSupplierError && isFetched && data) {
-            setSuppliersList((data as any).data);
-            console.log((data as any).data);
-        }
-    }, [data, isGetSupplierError, isFetched]);
+    const suppliersList: SupplierOption[] = (data as SuppliersResponse)?.data;
+    console.log(suppliersList);
 
     useEffect(() => {
         if (isSuccess && !isError) {
@@ -95,7 +93,7 @@ export default function AddBatchPage() {
         if (isError) {
             toast.error(error.message);
         }
-    }, [isError, isSuccess, isPending]);
+    }, [isError, isSuccess, isPending, error, form, router]);
 
     const onSubmit = (data: AddBatchInput) => {
         console.log("Batch submitted:", data);
@@ -106,7 +104,6 @@ export default function AddBatchPage() {
             ...data,
             initialQuantity: initQ,
         });
-        // call API
     };
 
     return (
@@ -193,7 +190,7 @@ export default function AddBatchPage() {
                                                 value={field.value}
                                             >
                                                 <FormControl>
-                                                    <SelectTrigger>
+                                                    <SelectTrigger className="w-full">
                                                         <SelectValue placeholder="Select breed" />
                                                     </SelectTrigger>
                                                 </FormControl>
@@ -334,7 +331,7 @@ export default function AddBatchPage() {
                                                         value={field.value}
                                                     >
                                                         <FormControl>
-                                                            <SelectTrigger>
+                                                            <SelectTrigger className="w-full">
                                                                 <SelectValue placeholder="Select supplier" />
                                                             </SelectTrigger>
                                                         </FormControl>
@@ -585,13 +582,13 @@ export default function AddBatchPage() {
                             size="lg"
                             className="flex-1 md:flex-none md:min-w-48 cursor-pointer"
                         >
-                            {
-                                isPending ? (
-                                    <>
-                                    <Spinner/> Creating batch...
-                                    </>
-                                ): "Create Batch"
-                            }
+                            {isPending ? (
+                                <>
+                                    <Spinner /> Creating batch...
+                                </>
+                            ) : (
+                                "Create Batch"
+                            )}
                         </Button>
                         <Button
                             type="button"

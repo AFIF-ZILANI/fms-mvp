@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { Plus, RefreshCcw, Save, X } from "lucide-react";
+import { Plus, RefreshCcw, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +28,6 @@ import { useGetData, usePostData } from "@/lib/api-request";
 import {
     addWeightRecordSchema,
     AvgWeightFormInput,
-    AvgWeightFormOutput,
 } from "@/schemas/weight-record.schema";
 import {
     Dialog,
@@ -40,6 +39,13 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Spinner } from "../ui/spinner";
+
+interface HelperResponse {
+    data: {
+        batches: { id: string; label: string }[];
+        houses: { id: number; label: string }[];
+    };
+}
 
 /* ---------------------------------- */
 /* Page */
@@ -69,26 +75,32 @@ export function AddWeightRecordDialog() {
     } = usePostData("/create/record/weight");
 
     const batches: { id: string; label: string }[] =
-        (helperData as any)?.data?.batches ?? [];
+        (helperData as HelperResponse)?.data?.batches ?? [];
 
     const houses: { id: number; label: string }[] =
-        (helperData as any)?.data?.houses ?? [];
+        (helperData as HelperResponse)?.data?.houses ?? [];
     // console.log(batches);
     // console.log(houses);
 
     /* ---------------- Effects ---------------- */
 
     useEffect(() => {
+        if (batches.length === 1) {
+            form.setValue("batchId", batches[0].id);
+        }
+    }, [batches, form]);
+
+    useEffect(() => {
         if (isSuccess) {
             toast.success("Weight record saved successfully!");
             form.reset();
-            setDialogOpen(false);
+            // setDialogOpen(false);
         }
 
         if (isError && error) {
             toast.error(error.message || "Failed to save weight record");
         }
-    }, [isSuccess, isError, error]);
+    }, [isSuccess, isError, error, form]);
 
     /* ---------------- Submit ---------------- */
 

@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
             });
         }
 
-        let data: { id: string; name: string; company?: string }[] = [];
+        const data: { id: string; name: string; company?: string }[] = [];
         suppliers.map((val) =>
             data.push({
                 id: val.id,

@@ -12,11 +12,11 @@
  *
  * @extends Error
  */
-export class AppError extends Error {
+export class AppError<E> extends Error {
     statusCode: number;
-    data: any;
+    data: E;
 
-    constructor(message: string, statusCode: number = 500, data: any = null) {
+    constructor(message: string, statusCode: number = 500, data: E) {
         super(message);
         this.statusCode = statusCode;
         this.data = data;
@@ -25,14 +25,14 @@ export class AppError extends Error {
 }
 
 // Helper function so you can throw easily
-export function throwError({
+export function throwError<T>({
     message,
     statusCode = 500,
-    data = null,
+    data,
 }: {
     message: string;
     statusCode?: number;
-    data?: any;
+    data?: T;
 }): never {
     throw new AppError(message, statusCode, data);
 }
