@@ -123,9 +123,10 @@ A **production-focused Farm Management System** built to help poultry & livestoc
 
 ```
 Frontend   →  React / Next.js + Tailwind + shadcn/ui
-Backend    →  Golang (API‑first)
+Backend    →  Nextjs (future plan is go with Golang)
 Database   →  PostgreSQL (Drizzle ORM)
 Cache      →  Redis
+IOT        →  Rust
 AI Layer   →  Modular (local + cloud models)
 ```
 
