@@ -123,7 +123,7 @@ A **production-focused Farm Management System** built to help poultry & livestoc
 
 ```
 Frontend   →  React / Next.js + Tailwind + shadcn/ui
-Backend    →  Nextjs (future plan is go with Golang)
+Backend    →  Golang (API‑first)
 Database   →  PostgreSQL (Drizzle ORM)
 Cache      →  Redis
 AI Layer   →  Modular (local + cloud models)
@@ -217,11 +217,24 @@ Until then: **All rights reserved**.
 
 ---
 
+## 🏢 Product & Ownership
+
+This project is a **product of ZeroD** and **ZeroD Farms**.
+
+* **Organization:** ZeroD
+* **Division:** ZeroD Farms
+* **GitHub (Organization):** [https://github.com/zerodofficial](https://github.com/zerodofficial)
+
+ZeroD focuses on building **real-world, production-grade systems** across technology and agriculture, with ZeroD Farms dedicated to **data-driven, profitable farming solutions**.
+
+---
+
 ## ✍️ Author
 
 **AFIF ZILANI**
 Entrepreneur & Programmer
-Builder of systems that must survive real‑world pressure.
+Co-founder & CEO, ZeroD
+Builder of systems that must survive real-world pressure.
 
 ---
 
