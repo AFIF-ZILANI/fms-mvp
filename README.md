@@ -1,36 +1,228 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌾 Farm Management System (FMS)
 
-## Getting Started
+A **production-focused Farm Management System** built to help poultry & livestock farms run **profitably**, **data‑driven**, and **scalably**.
 
-First, run the development server:
+> ⚠️ **Important clarity (no marketing fluff):**
+> This is **not** a generic SaaS FMS built for everyone. The primary goal is to **optimize my own farm operations**. External users may use it, but data transparency and trade‑offs will be clearly stated.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 🎯 Core Philosophy
+
+* Profit > vanity metrics
+* Decisions backed by **real farm data**, not assumptions
+* Transparency over dark UX patterns
+* Designed for **real farms**, not demo dashboards
+
+---
+
+## ✅ Current Working Features
+
+### 🏠 House Management
+
+* Create & manage farm houses (shed/house units)
+* Track capacity, status, and utilization
+
+### 🐣 Batch Management
+
+* Create new batches
+* Assign batches to houses
+* Track batch lifecycle (start → active → closed)
+
+### 📝 House Event Records
+
+* Mortality events
+* Medicine administration
+* Feed changes
+* Environmental or abnormal incidents
+
+### ⚖️ Weight Records
+
+* Periodic bird weight entry
+* Growth tracking per batch & house
+* Early detection of growth deviation
+
+---
+
+## 🚧 Upcoming (Short‑Term) Features
+
+### 🐔 Bird Allocation
+
+* Allocate birds dynamically across houses
+* Track inter‑house movement history
+
+### 📦 Stock Management
+
+* Feed inventory
+* Medicine inventory
+* Consumables (vaccines, disinfectants, tools)
+
+### 🛒 Purchase Management
+
+* Purchase items (feed, medicine, equipment)
+* Supplier tracking
+* Price history
+
+### 💰 Sales
+
+* Sell birds
+* Sell farm items
+* Track customer & sale history
+
+### 📊 Batch History & Analytics
+
+* Full batch timeline
+* Mortality %, FCR, growth rate
+* Profit/Loss per batch
+
+### 💼 Financial Section
+
+* Expense tracking
+* Income tracking
+* Cash flow overview
+
+### 📑 Report Generation
+
+* Daily / weekly / batch reports
+* Exportable formats (PDF/CSV later)
+
+---
+
+## 🚀 Advanced / Long‑Term Features (AI‑Powered)
+
+> These features will be **data‑dependent**. No fake AI promises.
+
+### 📅 Smart Dates
+
+* Recommended bird selling date
+* Chicks purchase planning
+
+### 📈 Market Prediction (AI)
+
+* X‑day market price prediction
+
+  * Live bird price
+  * Chick price
+* Uses historical + external signals
+
+### 🦠 Disease Detection System
+
+* Pattern‑based anomaly detection
+* Mortality + symptom correlation
+* Early warning alerts (not diagnosis claims)
+
+### 🤖 AI Farm Decision Suggester
+
+* Feed strategy suggestions
+* Sell vs hold recommendations
+* Risk warnings
+
+---
+
+## 🧱 System Architecture (High Level)
+
+```
+Frontend   →  React / Next.js + Tailwind + shadcn/ui
+Backend    →  Nextjs (future plan is go with Golang)
+Database   →  PostgreSQL (Drizzle ORM)
+Cache      →  Redis
+AI Layer   →  Modular (local + cloud models)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧩 Core Domain Concepts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Entities
 
-## Learn More
+* Farm
+* House
+* Batch
+* Bird
+* Stock Item
+* Purchase
+* Sale
+* Payment Instrument
+* Ledger Entry
 
-To learn more about Next.js, take a look at the following resources:
+### Design Principles
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* Event‑driven records (nothing magical)
+* Immutable history (no silent data loss)
+* Explicit ownership (farm, supplier, customer)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🔐 Data Transparency Policy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* **Free plan users:**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+  * Data may be stored in a public or shared repository
+  * Clearly stated before signup
+
+* **Paid users:**
+
+  * Private data
+  * Isolated storage
+
+No hidden clauses. No dark patterns.
+
+---
+
+## 🧪 Status
+
+* ⚙️ Actively developed
+* 🧠 Logic evolves with farm reality
+* 📉 Features removed if they don’t add value
+
+---
+
+## 📌 Non‑Goals (Explicit)
+
+* ❌ Becoming a bloated enterprise ERP
+* ❌ Chasing generic SaaS users
+* ❌ AI hype without measurable ROI
+
+---
+
+## 🛠 Internal Development Notes
+
+* Schema‑first design
+* Zod for validation
+* Strong typing across layers
+* Domain logic > UI tricks
+
+---
+
+## 📍 Roadmap Direction
+
+1. Farm profitability accuracy
+2. Batch‑level intelligence
+3. Predictive decision support
+4. Automation only where it saves money
+
+---
+
+## 🤝 Contribution
+
+Currently **closed‑core**.
+Selective collaboration possible if it improves real farm outcomes.
+
+---
+
+## 📄 License
+
+License will be defined once the system stabilizes.
+Until then: **All rights reserved**.
+
+---
+
+## ✍️ Author
+
+**AFIF ZILANI**
+Entrepreneur & Programmer
+Builder of systems that must survive real‑world pressure.
+
+---
+
+> If a feature doesn’t increase profit, reduce loss, or improve decision clarity — it doesn’t belong here.
